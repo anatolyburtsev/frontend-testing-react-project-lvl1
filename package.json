@@ -1,0 +1,39 @@
+{
+  "name": "@hexlet/code",
+  "version": "1.0.0",
+  "description": "[![Actions Status](https://github.com/anatolyburtsev/frontend-testing-react-project-lvl1/workflows/hexlet-check/badge.svg)](https://github.com/anatolyburtsev/frontend-testing-react-project-lvl1/actions)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines": {
+    "node": ">=14"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anatolyburtsev/frontend-testing-react-project-lvl1.git"
+  },
+  "author": "Anatolii Burtsev",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/anatolyburtsev/frontend-testing-react-project-lvl1/issues"
+  },
+  "homepage": "https://github.com/anatolyburtsev/frontend-testing-react-project-lvl1#readme",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "babel": "^6.23.0",
+    "babel-jest": "^27.0.2",
+    "commander": "^7.2.0",
+    "lodash": "^4.17.21",
+    "nock": "^13.0.11"
+  },
+  "devDependencies": {
+    "@jest/globals": "^27.0.3",
+    "eslint": "^7.27.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-plugin-import": "^2.23.4",
+    "eslint-plugin-jest": "^24.3.6",
+    "jest": "^27.0.3",
+    "jest-cli": "^27.0.3"
+  }
+}

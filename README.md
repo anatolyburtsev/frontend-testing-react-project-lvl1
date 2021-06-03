@@ -6,3 +6,4 @@
 ```shell
 $ npx babel-node bin/page-loader --output /var/tmp https://ru.hexlet.io/courses
 ```
+[![asciicast](https://asciinema.org/a/821Em3xcEIJlbmxjcrXvUyYvA.svg)](https://asciinema.org/a/821Em3xcEIJlbmxjcrXvUyYvA)

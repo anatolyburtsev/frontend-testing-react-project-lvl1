@@ -10,8 +10,8 @@ program
   .description('Create local copy of internet page')
   .arguments('<url>')
   .option('-o, --output [path]', 'output directory', process.cwd())
-  .action((url, options) => {
-    pageLoader(url, options.output);
+  .action(async (url, options) => {
+    await pageLoader(url, options.output);
   });
 
 program.parse();

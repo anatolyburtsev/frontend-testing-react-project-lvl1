@@ -6,10 +6,10 @@ const urlSchema = yup.string().url().required();
 
 export const isValidUrl = (string) => urlSchema.isValidSync(string);
 
-export const isFileExists = async (file) => fs.access(file, constants.F_OK)
+const isFileHasAttribute = async (file, constant) => fs.access(file, constant)
   .then(() => true)
   .catch(() => false);
 
-export const isPathWritable = async (file) => fs.access(file, constants.W_OK)
-  .then(() => true)
-  .catch(() => false);
+export const isFileExists = async (file) => isFileHasAttribute(file, constants.F_OK);
+
+export const isPathWritable = async (file) => isFileHasAttribute(file, constants.W_OK);

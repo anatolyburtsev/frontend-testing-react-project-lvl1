@@ -17,9 +17,10 @@ const loadFixture = (filename) => {
 
 const mockHttpResponse = (url, filename) => {
   const response = loadFixture(filename);
-  nock(url)
+  const scope = nock(url)
     .get(/.*/)
     .reply(200, response);
+  return scope;
 };
 
 let outputDir = '';
@@ -38,17 +39,31 @@ describe('tests on page loader', () => {
   });
 
   test('should send http request and save file', async () => {
-    const fixtureWebsiteFilename = 'website.html';
     const url = 'https://ru.hexlet.io/courses';
-    mockHttpResponse(url, fixtureWebsiteFilename);
-    const expectedFileContent = loadFixture(fixtureWebsiteFilename);
+    const mainPageScope = mockHttpResponse(url, 'website.html');
+    const expectedFileContent = loadFixture('websiteSaved.html');
     const expectedOutputFile = path.join(outputDir, 'ru-hexlet-io-courses.html');
-
+    const expectedOutputImage = path.join(outputDir, 'ru-hexlet-io-courses_files',
+      'ru-hexlet-io-assets-professions-nodejs.png');
+    const imageFixture = loadFixture('nodejs.png');
+    const imageScope = nock('https://ru.hexlet.io').get('/assets/professions/nodejs.png')
+      .reply(200, imageFixture, {
+        'content-type': 'application/octet-stream',
+        'content-length': imageFixture.length,
+        'content-disposition': 'attachment; filename=nodejs.png',
+      });
     await pageLoader(url, outputDir);
 
     expect(isFileExists(expectedOutputFile)).toBeTruthy();
     const content = readFileSync(expectedOutputFile, 'utf-8');
     expect(content).toEqual(expectedFileContent);
+
+    expect(isFileExists(expectedOutputImage)).toBeTruthy();
+    const image = readFileSync(expectedOutputImage, 'utf-8');
+    expect(image).toEqual(imageFixture);
+
+    expect(imageScope.isDone()).toBeTruthy();
+    expect(mainPageScope.isDone()).toBeTruthy();
   });
 
   test('should return error if url invalid', async () => {

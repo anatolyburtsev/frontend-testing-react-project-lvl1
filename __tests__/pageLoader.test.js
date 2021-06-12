@@ -4,6 +4,8 @@ import path from 'path';
 import os from 'os';
 import nock from 'nock';
 import { fileURLToPath } from 'url';
+// eslint-disable-next-line
+import * as axiosdebuglog from 'axios-debug-log';
 import pageLoader from '../src/pageLoader.js';
 import { isFileExists } from '../src/validators.js';
 

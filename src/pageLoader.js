@@ -7,7 +7,10 @@ import * as cheerio from 'cheerio';
 
 import fs from 'fs/promises';
 import { createWriteStream } from 'fs';
-import { isPathWritable, isValidUrl, isResourceLocal } from './validators.js';
+import debug from 'debug';
+import {
+  isPathWritable, isValidUrl, isResourceLocal,
+} from './validators.js';
 import { getFileNameFromUrl, getFileNameFromUrlWithExtension } from './utils.js';
 
 // don't throw exception on 4xx and 5xx
@@ -24,6 +27,9 @@ const processResources = ({
   const filesToSave = [];
   htmlCheerio(resourceType).each(function () {
     const oldSrc = htmlCheerio(this).attr(srcTagName);
+    if (oldSrc === undefined) {
+      return;
+    }
     const fileUrl = new URL(oldSrc, url);
     if (skipExternal && !isResourceLocal(url, fileUrl)) {
       return;
@@ -38,6 +44,7 @@ const processResources = ({
 };
 
 const pageLoader = async (url, outputPath) => {
+  const log = debug('page-loader');
   if (!isValidUrl(url)) {
     throw new Error(`Invalid url: ${url}`);
   }
@@ -56,6 +63,7 @@ const pageLoader = async (url, outputPath) => {
   const filesFolderAbsolutePath = path.join(outputPath, filesFolderPath);
   await fs.mkdir(filesFolderAbsolutePath);
 
+  log('Starting parsing html');
   const $ = cheerio.load(rawHtmlContent);
 
   const imagesToSave = processResources({
@@ -64,6 +72,7 @@ const pageLoader = async (url, outputPath) => {
     url,
     filesFolderPath,
   });
+  log(`${imagesToSave.length} images found`);
 
   const scriptsToSave = processResources({
     htmlCheerio: $,
@@ -72,6 +81,7 @@ const pageLoader = async (url, outputPath) => {
     filesFolderPath,
     skipExternal: true,
   });
+  log(`${scriptsToSave.length} scripts found`);
 
   const linksToSave = processResources({
     htmlCheerio: $,
@@ -81,10 +91,12 @@ const pageLoader = async (url, outputPath) => {
     skipExternal: true,
     srcTagName: 'href',
   });
+  log(`${linksToSave.length} links and css found`);
 
   const filesToSave = [...imagesToSave, ...scriptsToSave, ...linksToSave];
   const downloadedResources = [url];
 
+  log('start downloading files');
   await Promise.all(
     filesToSave.map(({ fileUrl, filename }) => {
       if (downloadedResources.includes(fileUrl.href)) {
@@ -93,10 +105,13 @@ const pageLoader = async (url, outputPath) => {
       downloadedResources.push(fileUrl.href);
 
       const filePath = path.join(filesFolderAbsolutePath, filename);
+      log(`downloading ${filename}`);
       return axios.get(fileUrl.href, { responseType: 'stream' })
-        .then((imageResponse) => imageResponse.data.pipe(createWriteStream(filePath)));
+        .then((imageResponse) => imageResponse.data.pipe(createWriteStream(filePath)))
+        .then(() => log(`downloaded ${filename}`));
     }),
   );
+  log('finish downloading files');
 
   const filepath = path.join(outputPath, getFileNameFromUrl(url, '.html'));
   await fs.writeFile(filepath, $.html(), 'utf-8');

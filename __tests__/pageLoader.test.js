@@ -39,31 +39,55 @@ describe('tests on page loader', () => {
   });
 
   test('should send http request and save file', async () => {
-    const url = 'https://ru.hexlet.io/courses';
-    const mainPageScope = mockHttpResponse(url, 'website.html');
-    const expectedFileContent = loadFixture('websiteSaved.html');
-    const expectedOutputFile = path.join(outputDir, 'ru-hexlet-io-courses.html');
-    const expectedOutputImage = path.join(outputDir, 'ru-hexlet-io-courses_files',
+    const expectedHTMLFilePath = path.join(outputDir, 'ru-hexlet-io-courses.html');
+    const expectedHTMLFileContent = loadFixture('websiteSaved.html');
+    const expectedImagePath = path.join(outputDir, 'ru-hexlet-io-courses_files',
       'ru-hexlet-io-assets-professions-nodejs.png');
-    const imageFixture = loadFixture('nodejs.png');
-    const imageScope = nock('https://ru.hexlet.io').get('/assets/professions/nodejs.png')
-      .reply(200, imageFixture, {
+    const expectedImageContent = loadFixture('nodejs.png');
+    const expectedCssPath = path.join(outputDir, 'ru-hexlet-io-courses_files',
+      'ru-hexlet-io-assets-application.css');
+    const expectedCssContent = loadFixture('application.css');
+    const expectedScriptPath = path.join(outputDir, 'ru-hexlet-io-courses_files',
+      'ru-hexlet-io-packs-js-runtime.js');
+    const expectedScriptContent = loadFixture('runtime.js');
+
+    const baseUrl = 'https://ru.hexlet.io';
+    const url = 'https://ru.hexlet.io/courses';
+
+    const mainHTMLScope = mockHttpResponse(url, 'website.html');
+    const imageScope = nock(baseUrl).get('/assets/professions/nodejs.png')
+      .reply(200, expectedImageContent, {
         'content-type': 'application/octet-stream',
-        'content-length': imageFixture.length,
+        'content-length': expectedImageContent.length,
         'content-disposition': 'attachment; filename=nodejs.png',
       });
+    const cssScope = nock(baseUrl).get('/assets/application.css')
+      .reply(200, expectedCssContent);
+    const scriptScope = nock(baseUrl).get('/packs/js/runtime.js')
+      .reply(200, expectedScriptContent);
+
     await pageLoader(url, outputDir);
 
-    expect(isFileExists(expectedOutputFile)).toBeTruthy();
-    const content = readFileSync(expectedOutputFile, 'utf-8');
-    expect(content).toEqual(expectedFileContent);
+    expect(isFileExists(expectedHTMLFilePath)).toBeTruthy();
+    const htmlContent = readFileSync(expectedHTMLFilePath, 'utf-8');
+    expect(htmlContent).toEqual(expectedHTMLFileContent);
 
-    expect(isFileExists(expectedOutputImage)).toBeTruthy();
-    const image = readFileSync(expectedOutputImage, 'utf-8');
-    expect(image).toEqual(imageFixture);
+    expect(isFileExists(expectedImagePath)).toBeTruthy();
+    const image = readFileSync(expectedImagePath, 'utf-8');
+    expect(image).toEqual(expectedImageContent);
+
+    expect(isFileExists(expectedCssPath)).toBeTruthy();
+    const css = readFileSync(expectedCssPath, 'utf-8');
+    expect(css).toEqual(expectedCssContent);
+
+    expect(isFileExists(expectedScriptPath)).toBeTruthy();
+    const script = readFileSync(expectedScriptPath, 'utf-8');
+    expect(script).toEqual(expectedScriptContent);
 
     expect(imageScope.isDone()).toBeTruthy();
-    expect(mainPageScope.isDone()).toBeTruthy();
+    expect(mainHTMLScope.isDone()).toBeTruthy();
+    expect(cssScope.isDone()).toBeTruthy();
+    expect(scriptScope.isDone()).toBeTruthy();
   });
 
   test('should return error if url invalid', async () => {

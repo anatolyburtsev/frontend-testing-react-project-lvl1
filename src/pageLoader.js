@@ -139,6 +139,9 @@ const pageLoader = async (url, outputPath) => {
     rawHtmlContent, url, filesFolderPath, log,
   });
 
+  const filepath = path.join(outputPath, getFileNameFromUrl(url, '.html'));
+  await fs.writeFile(filepath, processedPage.content, 'utf-8');
+
   const { failedToDownload } = await downloadFiles({
     filesToSave: processedPage.filesToSave,
     url,
@@ -146,12 +149,11 @@ const pageLoader = async (url, outputPath) => {
     log,
   });
 
-  const filepath = path.join(outputPath, getFileNameFromUrl(url, '.html'));
-  await fs.writeFile(filepath, processedPage.content, 'utf-8');
-
   if (failedToDownload.length > 0) {
     throw new Error(`Failed to download several resources: ${failedToDownload}`);
   }
+
+  await new Promise((r) => setTimeout(r, 10));
 };
 
 export default pageLoader;

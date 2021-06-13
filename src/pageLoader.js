@@ -141,6 +141,7 @@ const pageLoader = async (url, outputPath) => {
 
   const filepath = path.join(outputPath, getFileNameFromUrl(url, '.html'));
   await fs.writeFile(filepath, processedPage.content, 'utf-8');
+  log(`main html saved to ${filepath}`);
 
   const { failedToDownload } = await downloadFiles({
     filesToSave: processedPage.filesToSave,

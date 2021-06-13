@@ -92,6 +92,28 @@ describe('tests on page loader', () => {
     expect(scriptScope.isDone()).toBeTruthy();
   });
 
+  test('should return error if file is unavailable', async () => {
+    const baseUrl = 'https://ru.hexlet.io';
+    const url = 'https://ru.hexlet.io/courses';
+    const expectedScriptContent = loadFixture('runtime.js');
+    const expectedImageContent = loadFixture('nodejs.png');
+
+    mockHttpResponse(url, 'website.html');
+    nock(baseUrl).get('/assets/professions/nodejs.png')
+      .reply(200, expectedImageContent, {
+        'content-type': 'application/octet-stream',
+        'content-length': expectedImageContent.length,
+        'content-disposition': 'attachment; filename=nodejs.png',
+      });
+    nock(baseUrl).get('/packs/js/runtime.js')
+      .reply(200, expectedScriptContent);
+    nock(baseUrl).get('/assets/application.css')
+      .reply(500, {});
+
+    await expect(pageLoader(url, outputDir)).rejects
+      .toThrowError(/Failed to download several resources: ru-hexlet-io-assets-application.css/);
+  });
+
   test('should return error if url invalid', async () => {
     const invalidUrl = 'htp://ya.ru';
     await expect(pageLoader(invalidUrl, outputDir)).rejects.toThrowError(/Invalid url/);

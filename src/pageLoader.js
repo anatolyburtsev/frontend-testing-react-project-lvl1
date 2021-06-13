@@ -4,6 +4,7 @@ import {
 } from 'http-status-codes';
 import path from 'path';
 import * as cheerio from 'cheerio';
+import _ from 'lodash';
 
 import fs from 'fs/promises';
 import { createWriteStream } from 'fs';
@@ -43,26 +44,12 @@ const processResources = ({
   return filesToSave;
 };
 
-const pageLoader = async (url, outputPath) => {
-  const log = debug('page-loader');
-  if (!isValidUrl(url)) {
-    throw new Error(`Invalid url: ${url}`);
-  }
-
-  if (!await isPathWritable(outputPath)) {
-    throw new Error(`No permissions to write to ${outputPath}`);
-  }
-
-  const response = await axios.get(url);
-  if (response.status !== StatusCodes.OK) {
-    throw new Error(`Request failed, status code: ${response.status}`);
-  }
-
-  const rawHtmlContent = response.data;
-  const filesFolderPath = getFileNameFromUrl(url, '_files');
-  const filesFolderAbsolutePath = path.join(outputPath, filesFolderPath);
-  await fs.mkdir(filesFolderAbsolutePath);
-
+const processPage = ({
+  rawHtmlContent,
+  url,
+  filesFolderPath,
+  log,
+}) => {
   log('Starting parsing html');
   const $ = cheerio.load(rawHtmlContent);
 
@@ -94,27 +81,77 @@ const pageLoader = async (url, outputPath) => {
   log(`${linksToSave.length} links and css found`);
 
   const filesToSave = [...imagesToSave, ...scriptsToSave, ...linksToSave];
-  const downloadedResources = [url];
+  return {
+    content: $.html(),
+    filesToSave,
+  };
+};
 
-  log('start downloading files');
-  await Promise.all(
-    filesToSave.map(({ fileUrl, filename }) => {
-      if (downloadedResources.includes(fileUrl.href)) {
-        return Promise.resolve();
-      }
-      downloadedResources.push(fileUrl.href);
-
-      const filePath = path.join(filesFolderAbsolutePath, filename);
-      log(`downloading ${filename}`);
-      return axios.get(fileUrl.href, { responseType: 'stream' })
-        .then((imageResponse) => imageResponse.data.pipe(createWriteStream(filePath)))
-        .then(() => log(`downloaded ${filename}`));
-    }),
+const downloadFiles = async ({
+  filesToSave, url, filesFolderAbsolutePath, log,
+}) => {
+  const uniqFilesToSave = _.uniq(filesToSave).filter((el) => el.fileUrl.href !== url);
+  log(`Downloading ${uniqFilesToSave.length} files`);
+  const fileContents = await Promise.all(
+    uniqFilesToSave.map(({ fileUrl }) => axios.get(fileUrl.href, { responseType: 'stream' })),
   );
-  log('finish downloading files');
+  const failedToDownload = [];
+
+  uniqFilesToSave.forEach(({ filename }, idx) => {
+    const filePath = path.join(filesFolderAbsolutePath, filename);
+    const fileStream = createWriteStream(filePath);
+    const content = fileContents[idx];
+    if (content.status !== StatusCodes.OK) {
+      failedToDownload.push(filename);
+      log(`failed to download ${filename}`);
+    } else {
+      content.data.pipe(fileStream);
+      log(`saved ${filename}`);
+    }
+  });
+  return {
+    failedToDownload,
+  };
+};
+
+const pageLoader = async (url, outputPath) => {
+  const log = debug('page-loader');
+  if (!isValidUrl(url)) {
+    throw new Error(`Invalid url: ${url}`);
+  }
+
+  if (!await isPathWritable(outputPath)) {
+    throw new Error(`No permissions to write to ${outputPath}`);
+  }
+
+  const response = await axios.get(url);
+  if (response.status !== StatusCodes.OK) {
+    throw new Error(`Request failed, status code: ${response.status}`);
+  }
+
+  const rawHtmlContent = response.data;
+  const filesFolderPath = getFileNameFromUrl(url, '_files');
+  const filesFolderAbsolutePath = path.join(outputPath, filesFolderPath);
+  await fs.mkdir(filesFolderAbsolutePath);
+  log(`Path to files: ${filesFolderAbsolutePath}`);
+
+  const processedPage = processPage({
+    rawHtmlContent, url, filesFolderPath, log,
+  });
+
+  const { failedToDownload } = await downloadFiles({
+    filesToSave: processedPage.filesToSave,
+    url,
+    filesFolderAbsolutePath,
+    log,
+  });
 
   const filepath = path.join(outputPath, getFileNameFromUrl(url, '.html'));
-  await fs.writeFile(filepath, $.html(), 'utf-8');
+  await fs.writeFile(filepath, processedPage.content, 'utf-8');
+
+  if (failedToDownload.length > 0) {
+    throw new Error(`Failed to download several resources: ${failedToDownload}`);
+  }
 };
 
 export default pageLoader;

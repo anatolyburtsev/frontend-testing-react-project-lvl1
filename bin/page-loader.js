@@ -11,7 +11,12 @@ program
   .arguments('<url>')
   .option('-o, --output [path]', 'output directory', process.cwd())
   .action(async (url, options) => {
-    await pageLoader(url, options.output);
+    try {
+      await pageLoader(url, options.output);
+    } catch (e) {
+      console.error(e);
+      process.exit(1);
+    }
   });
 
 program.parse();

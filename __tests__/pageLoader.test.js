@@ -68,8 +68,9 @@ describe('tests on page loader', () => {
     const scriptScope = nock(baseUrl).get('/packs/js/runtime.js')
       .reply(200, expectedScriptContent);
 
-    await pageLoader(url, outputDir);
+    const { filepath } = await pageLoader(url, outputDir);
 
+    expect(filepath).toEqual(expectedHTMLFilePath);
     expect(isFileExists(expectedHTMLFilePath)).toBeTruthy();
     const htmlContent = readFileSync(expectedHTMLFilePath, 'utf-8');
     expect(htmlContent).toEqual(expectedHTMLFileContent);

@@ -155,6 +155,9 @@ const pageLoader = async (url, outputPath) => {
   }
 
   await new Promise((r) => setTimeout(r, 10));
+  return {
+    filepath,
+  };
 };
 
 export default pageLoader;

@@ -10,7 +10,7 @@ import fs from 'fs/promises';
 import { createWriteStream } from 'fs';
 import debug from 'debug';
 import {
-  isPathWritable, isValidUrl, isResourceLocal,
+  isPathWritable, isResourceLocal,
 } from './validators.js';
 import { getFileNameFromUrl, getFileNameFromUrlWithExtension } from './utils.js';
 
@@ -117,9 +117,9 @@ const downloadFiles = async ({
 
 const pageLoader = async (url, outputPath = process.cwd()) => {
   const log = debug('page-loader');
-  if (!isValidUrl(url)) {
-    throw new Error(`Invalid url: ${url}`);
-  }
+  // if (!isValidUrl(url)) {
+  //   throw new Error(`Invalid url: ${url}`);
+  // }
 
   if (!await isPathWritable(outputPath)) {
     throw new Error(`No permissions to write to ${outputPath}`);

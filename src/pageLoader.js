@@ -115,7 +115,7 @@ const downloadFiles = async ({
   };
 };
 
-const pageLoader = async (url, outputPath) => {
+const pageLoader = async (url, outputPath = process.cwd()) => {
   const log = debug('page-loader');
   if (!isValidUrl(url)) {
     throw new Error(`Invalid url: ${url}`);

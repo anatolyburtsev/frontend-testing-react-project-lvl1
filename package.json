@@ -10,6 +10,9 @@
   "engines": {
     "node": ">=14"
   },
+  "bin": {
+    "page-loader": "bin/page-loader.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/anatolyburtsev/frontend-testing-react-project-lvl1.git"

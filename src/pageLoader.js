@@ -88,10 +88,11 @@ const processPage = ({
 };
 
 const downloadFiles = async ({
-  filesToSave, url, filesFolderAbsolutePath, log,
+  filesToSave, filesFolderAbsolutePath, log,
 }) => {
-  const uniqFilesToSave = _.uniq(filesToSave).filter((el) => el.fileUrl.href !== url);
-  log(`Downloading ${uniqFilesToSave.length} files`);
+  const uniqFilesToSave = _.uniq(filesToSave);// .filter((el) => el.fileUrl.href !== url);
+  const filenames = uniqFilesToSave.map(({ filename }) => filename).join('\n');
+  log(`Downloading ${uniqFilesToSave.length} files: \n${filenames}`);
   const fileContents = await Promise.all(
     uniqFilesToSave.map(({ fileUrl }) => axios.get(fileUrl.href, { responseType: 'stream' })),
   );
@@ -145,7 +146,6 @@ const pageLoader = async (url, outputPath) => {
 
   const { failedToDownload } = await downloadFiles({
     filesToSave: processedPage.filesToSave,
-    url,
     filesFolderAbsolutePath,
     log,
   });

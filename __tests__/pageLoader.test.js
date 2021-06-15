@@ -17,14 +17,6 @@ const loadFixture = (filename) => {
   return readFileSync(pathToFixtures, 'utf8');
 };
 
-const mockHttpResponse = (url, filename) => {
-  const response = loadFixture(filename);
-  const scope = nock(url)
-    .get(/.*/)
-    .reply(200, response);
-  return scope;
-};
-
 let outputDir = '';
 
 describe('tests on page loader', () => {
@@ -56,7 +48,10 @@ describe('tests on page loader', () => {
     const baseUrl = 'https://ru.hexlet.io';
     const url = 'https://ru.hexlet.io/courses';
 
-    const mainHTMLScope = mockHttpResponse(url, 'website.html');
+    const mainHTMLScope = nock(baseUrl)
+      .get('/courses')
+      .twice()
+      .reply(200, loadFixture('website.html'));
     const imageScope = nock(baseUrl).get('/assets/professions/nodejs.png')
       .reply(200, expectedImageContent, {
         'content-type': 'application/octet-stream',
@@ -99,7 +94,10 @@ describe('tests on page loader', () => {
     const expectedScriptContent = loadFixture('runtime.js');
     const expectedImageContent = loadFixture('nodejs.png');
 
-    mockHttpResponse(url, 'website.html');
+    nock(baseUrl)
+      .get('/courses')
+      .twice()
+      .reply(200, loadFixture('website.html'));
     nock(baseUrl).get('/assets/professions/nodejs.png')
       .reply(200, expectedImageContent, {
         'content-type': 'application/octet-stream',

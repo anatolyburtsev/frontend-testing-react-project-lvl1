@@ -115,7 +115,7 @@ const downloadFiles = async ({
   };
 };
 
-const pageLoader = async (url, outputPath = process.cwd()) => {
+export default async (url, outputPath = process.cwd()) => {
   const log = debug('page-loader');
 
   if (!await isPathWritable(outputPath)) {
@@ -156,5 +156,3 @@ const pageLoader = async (url, outputPath = process.cwd()) => {
     filepath,
   };
 };
-
-export default pageLoader;

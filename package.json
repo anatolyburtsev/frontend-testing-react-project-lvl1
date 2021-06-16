@@ -3,12 +3,8 @@
   "version": "1.0.0",
   "description": "[![Actions Status](https://github.com/anatolyburtsev/frontend-testing-react-project-lvl1/workflows/hexlet-check/badge.svg)](https://github.com/anatolyburtsev/frontend-testing-react-project-lvl1/actions)",
   "main": "src/index.js",
-  "type": "module",
   "scripts": {
-    "test": "jest"
-  },
-  "engines": {
-    "node": ">=14"
+    "test": "npx jest --bail"
   },
   "bin": {
     "page-loader": "bin/page-loader.js"
@@ -28,19 +24,19 @@
     "axios-debug-log": "^0.8.2",
     "cheerio": "^1.0.0-rc.9",
     "commander": "^7.2.0",
-    "debug": "^4.3.1",
     "http-status-codes": "^2.1.4",
-    "lodash": "^4.17.21",
-    "mock-fs": "^5.0.0",
-    "nock": "^13.0.11"
+    "debug": "^4.3.1",
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
     "@babel/core": "^7.14.3",
     "@babel/cli": "^7.14.4",
     "@babel/node": "^7.14.4",
     "@babel/preset-env": "^7.14.4",
-    "babel-jest": "^27.0.2",
+    "babel-jest": "^26.6.3",
+    "@types/jest": "^26.0.23",
     "@jest/globals": "^27.0.3",
+    "nock": "^13.0.11",
     "eslint": "^7.27.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-plugin-import": "^2.23.4",

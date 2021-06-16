@@ -6,7 +6,7 @@ import nock from 'nock';
 import { fileURLToPath } from 'url';
 // eslint-disable-next-line
 import * as axiosdebuglog from 'axios-debug-log';
-import pageLoader from '../src/pageLoader.js';
+import pageLoader from '../src/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

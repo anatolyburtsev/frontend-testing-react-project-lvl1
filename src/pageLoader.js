@@ -90,7 +90,7 @@ const processPage = ({
 const downloadFiles = async ({
   filesToSave, filesFolderAbsolutePath, log,
 }) => {
-  const uniqFilesToSave = _.uniq(filesToSave);// .filter((el) => el.fileUrl.href !== url);
+  const uniqFilesToSave = _.uniq(filesToSave);
   const filenames = uniqFilesToSave.map(({ filename }) => filename).join('\n');
   log(`Downloading ${uniqFilesToSave.length} files: \n${filenames}`);
   const fileContents = await Promise.all(
@@ -117,9 +117,6 @@ const downloadFiles = async ({
 
 const pageLoader = async (url, outputPath = process.cwd()) => {
   const log = debug('page-loader');
-  // if (!isValidUrl(url)) {
-  //   throw new Error(`Invalid url: ${url}`);
-  // }
 
   if (!await isPathWritable(outputPath)) {
     throw new Error(`No permissions to write to ${outputPath}`);

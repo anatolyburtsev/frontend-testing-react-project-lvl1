@@ -7,7 +7,6 @@ import { fileURLToPath } from 'url';
 // eslint-disable-next-line
 import * as axiosdebuglog from 'axios-debug-log';
 import pageLoader from '../src/pageLoader.js';
-import { isFileExists } from '../src/validators.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,8 +18,7 @@ const loadFixture = (filename) => {
 
 let outputDir = '';
 
-const checkFile = (filePath, fileContent) => {
-  expect(isFileExists(filePath)).toBeTruthy();
+const checkFile = async (filePath, fileContent) => {
   const content = readFileSync(filePath, 'utf-8');
   expect(content).toEqual(fileContent);
 };
@@ -77,11 +75,11 @@ describe('tests on page loader', () => {
 
     expect(filepath).toEqual(expectedHTMLFilePath);
 
-    checkFile(expectedHTMLFilePath, expectedHTMLFileContent);
-    checkFile(expectedImagePath, expectedImageContent);
-    checkFile(expectedCssPath, expectedCssContent);
-    checkFile(expectedScriptPath, expectedScriptContent);
-    checkFile(expectedHTMLLinkFilePath, expectedHTMLLinkContent);
+    await checkFile(expectedHTMLFilePath, expectedHTMLFileContent);
+    await checkFile(expectedImagePath, expectedImageContent);
+    await checkFile(expectedCssPath, expectedCssContent);
+    await checkFile(expectedScriptPath, expectedScriptContent);
+    await checkFile(expectedHTMLLinkFilePath, expectedHTMLLinkContent);
 
     expect(imageScope.isDone()).toBeTruthy();
     expect(mainHTMLScope.isDone()).toBeTruthy();

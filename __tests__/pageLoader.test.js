@@ -3,14 +3,14 @@ import { readFileSync } from 'fs';
 import path from 'path';
 import os from 'os';
 import nock from 'nock';
-// import { fileURLToPath } from 'url';
+import { fileURLToPath } from 'url';
 // eslint-disable-next-line
 import * as axiosdebuglog from 'axios-debug-log';
 import pageLoader from '../src/pageLoader.js';
 import { isFileExists } from '../src/validators.js';
 
-// const __filename = fileURLToPath(import.meta.url);
-// const __dirname = path.dirname(__filename);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const loadFixture = (filename) => {
   const pathToFixtures = path.resolve(__dirname, '../__fixture__/', filename);
@@ -33,17 +33,21 @@ describe('tests on page loader', () => {
   });
 
   test('should send http request and save file', async () => {
+    const filesDir = 'ru-hexlet-io-courses_files';
     const expectedHTMLFilePath = path.join(outputDir, 'ru-hexlet-io-courses.html');
     const expectedHTMLFileContent = loadFixture('websiteSaved.html');
-    const expectedImagePath = path.join(outputDir, 'ru-hexlet-io-courses_files',
+    const expectedImagePath = path.join(outputDir, filesDir,
       'ru-hexlet-io-assets-professions-nodejs.png');
     const expectedImageContent = loadFixture('nodejs.png');
-    const expectedCssPath = path.join(outputDir, 'ru-hexlet-io-courses_files',
+    const expectedCssPath = path.join(outputDir, filesDir,
       'ru-hexlet-io-assets-application.css');
     const expectedCssContent = loadFixture('application.css');
-    const expectedScriptPath = path.join(outputDir, 'ru-hexlet-io-courses_files',
+    const expectedScriptPath = path.join(outputDir, filesDir,
       'ru-hexlet-io-packs-js-runtime.js');
     const expectedScriptContent = loadFixture('runtime.js');
+    const expectedHTMLLinkFilePath = path.join(outputDir, filesDir,
+      'ru-hexlet-io-courses.html');
+    const expectedHTMLLinkContent = loadFixture('website.html');
 
     const baseUrl = 'https://ru.hexlet.io';
     const url = 'https://ru.hexlet.io/courses';
@@ -81,6 +85,10 @@ describe('tests on page loader', () => {
     expect(isFileExists(expectedScriptPath)).toBeTruthy();
     const script = readFileSync(expectedScriptPath, 'utf-8');
     expect(script).toEqual(expectedScriptContent);
+
+    expect(isFileExists(expectedHTMLLinkFilePath)).toBeTruthy();
+    const htmlLinkFile = readFileSync(expectedHTMLLinkFilePath, 'utf-8');
+    expect(htmlLinkFile).toEqual(expectedHTMLLinkContent);
 
     expect(imageScope.isDone()).toBeTruthy();
     expect(mainHTMLScope.isDone()).toBeTruthy();

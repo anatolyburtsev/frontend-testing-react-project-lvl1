@@ -24,11 +24,8 @@
   },
   "homepage": "https://github.com/anatolyburtsev/frontend-testing-react-project-lvl1#readme",
   "dependencies": {
-    "@babel/core": "^7.14.3",
-    "@babel/preset-env": "^7.14.4",
     "axios": "^0.21.1",
     "axios-debug-log": "^0.8.2",
-    "babel-jest": "^27.0.2",
     "cheerio": "^1.0.0-rc.9",
     "commander": "^7.2.0",
     "debug": "^4.3.1",
@@ -40,6 +37,9 @@
     "yup": "^0.32.9"
   },
   "devDependencies": {
+    "@babel/core": "^7.14.3",
+    "@babel/preset-env": "^7.14.4",
+    "babel-jest": "^27.0.2",
     "@jest/globals": "^27.0.3",
     "babel-cli": "^6.26.0",
     "eslint": "^7.27.0",

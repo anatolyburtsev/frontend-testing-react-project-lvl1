@@ -3,14 +3,14 @@ import { readFileSync } from 'fs';
 import path from 'path';
 import os from 'os';
 import nock from 'nock';
-import { fileURLToPath } from 'url';
+// import { fileURLToPath } from 'url';
 // eslint-disable-next-line
 import * as axiosdebuglog from 'axios-debug-log';
 import pageLoader from '../src/pageLoader.js';
 import { isFileExists } from '../src/validators.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
 
 const loadFixture = (filename) => {
   const pathToFixtures = path.resolve(__dirname, '../__fixture__/', filename);

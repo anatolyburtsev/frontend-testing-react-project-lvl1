@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import pkg from 'commander';
-import pageLoader from '../src/pageLoader.js';
+import pageLoader from '../src/index.js';
 
 const { program } = pkg;
 

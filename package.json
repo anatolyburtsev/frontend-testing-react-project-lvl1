@@ -4,7 +4,7 @@
   "description": "[![Actions Status](https://github.com/anatolyburtsev/frontend-testing-react-project-lvl1/workflows/hexlet-check/badge.svg)](https://github.com/anatolyburtsev/frontend-testing-react-project-lvl1/actions)",
   "main": "src/index.js",
   "scripts": {
-    "test": "npx jest --bail"
+    "test": "npx jest --color"
   },
   "bin": {
     "page-loader": "bin/page-loader.js"

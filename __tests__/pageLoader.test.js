@@ -38,5 +38,11 @@ describe('tests on page loader', () => {
 
   test("dummy", () => {
     expect(true).toBeTruthy();
-  })
+  });
+
+  test("should return error if doesn't have write permissions to the output dir",
+      async () => {
+        const notWritablePath = '/p4roc';
+        await expect(pageLoader('http://ya.ru/', notWritablePath)).rejects.toThrowError(/No permissions to write/);
+      });
 });

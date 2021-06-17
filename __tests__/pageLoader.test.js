@@ -132,9 +132,9 @@ describe('tests on page loader, negative cases', () => {
     await expect(pageLoader(url, outputDir)).rejects.toThrowError(/Request failed/);
   });
 
-  test.skip("should return error if doesn't have write permissions to the output dir",
+  test("should return error if doesn't have write permissions to the output dir",
     async () => {
-      const notWritablePath = '/proc';
+      const notWritablePath = '/p4roc';
       await expect(pageLoader(url, notWritablePath)).rejects.toThrowError(/No permissions to write/);
     });
 });

@@ -1,23 +1,23 @@
 #!/usr/bin/env node
 
-import pkg from 'commander';
-import pageLoader from '../src/index.js';
+import { program } from 'commander';
+import { cwd } from 'process';
+import load from '../src/loader.js';
 
-const { program } = pkg;
+const run = async (url, options) => {
+  try {
+    const { output } = options;
+    console.log(await load(url, output));
+  } catch (e) {
+    console.error(e.message);
+    process.exit(1);
+  }
+};
 
 program
-  .version('0.0.1')
-  .description('Create local copy of internet page')
+  .description('Site loader')
+  .version('1.0.0')
   .arguments('<url>')
-  .option('-o, --output [path]', 'output directory', process.cwd())
-  .action(async (url, options) => {
-    try {
-      const { filepath } = await pageLoader(url, options.output);
-      console.log(filepath);
-    } catch (e) {
-      console.error(e);
-      process.exit(1);
-    }
-  });
-
-program.parse();
+  .option('-o, --output <v>', 'output path', cwd())
+  .action(run)
+  .parse();

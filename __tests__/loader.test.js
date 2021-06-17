@@ -3,7 +3,7 @@ import { existsSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import nock from 'nock';
-import load from '../src/index.js';
+import load from '../src/loader.js';
 
 const readFixture = async (...paths) => readFile(join(__dirname, '..', '__fixtures__', ...paths), 'utf-8');
 
@@ -33,8 +33,8 @@ describe('positive cases', () => {
     const loadedHtml = await readFixture('expected', 'site.html');
     const result = await load('https://site.com/path', path);
 
-    expect(result).toEqual({ filepath: join(path, 'site-com-path.html') });
-    expect(await readFile(result.filepath, 'utf-8')).toEqual(loadedHtml);
+    expect(result).toEqual(join(path, 'site-com-path.html'));
+    expect(await readFile(result, 'utf-8')).toEqual(loadedHtml);
   });
 
   test.each(resources)('resource %s', async (resource) => {

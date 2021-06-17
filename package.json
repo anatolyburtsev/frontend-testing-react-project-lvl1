@@ -1,47 +1,40 @@
 {
   "name": "@hexlet/code",
   "version": "1.0.0",
-  "description": "[![Actions Status](https://github.com/anatolyburtsev/frontend-testing-react-project-lvl1/workflows/hexlet-check/badge.svg)](https://github.com/anatolyburtsev/frontend-testing-react-project-lvl1/actions)",
-  "main": "src/index.js",
+  "description": "page loader",
+  "bin": {
+    "page-loader": "./bin/page-loader.js"
+  },
+  "main": "src/loader.js",
   "scripts": {
     "test": "npx jest --bail"
   },
-  "bin": {
-    "page-loader": "bin/page-loader.js"
-  },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/anatolyburtsev/frontend-testing-react-project-lvl1.git"
+    "url": "git+https://github.com/Argentum88/frontend-testing-react-project-lvl1.git"
   },
-  "author": "Anatolii Burtsev",
+  "author": "Pavel Andreev",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/anatolyburtsev/frontend-testing-react-project-lvl1/issues"
+    "url": "https://github.com/Argentum88/frontend-testing-react-project-lvl1/issues"
   },
-  "homepage": "https://github.com/anatolyburtsev/frontend-testing-react-project-lvl1#readme",
+  "homepage": "https://github.com/Argentum88/frontend-testing-react-project-lvl1#readme",
+  "devDependencies": {
+    "@babel/node": "^7.14.2",
+    "@babel/preset-env": "^7.14.2",
+    "@types/jest": "^26.0.23",
+    "babel-jest": "^26.6.3",
+    "eslint": "^7.26.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-plugin-import": "^2.23.2",
+    "eslint-plugin-jest": "^24.3.6",
+    "jest": "^27.0",
+    "nock": "^13.0.11"
+  },
   "dependencies": {
     "axios": "^0.21.1",
-    "axios-debug-log": "^0.8.2",
     "cheerio": "^1.0.0-rc.9",
     "commander": "^7.2.0",
-    "http-status-codes": "^2.1.4",
-    "debug": "^4.3.1",
-    "lodash": "^4.17.21"
-  },
-  "devDependencies": {
-    "@babel/core": "^7.14.3",
-    "@babel/cli": "^7.14.4",
-    "@babel/node": "^7.14.4",
-    "@babel/preset-env": "^7.14.4",
-    "babel-jest": "^26.6.3",
-    "@types/jest": "^26.0.23",
-    "@jest/globals": "^27.0.3",
-    "nock": "^13.0.11",
-    "eslint": "^7.27.0",
-    "eslint-config-airbnb-base": "^14.2.1",
-    "eslint-plugin-import": "^2.23.4",
-    "eslint-plugin-jest": "^24.3.6",
-    "jest": "^27.0.3",
-    "jest-cli": "^27.0.3"
+    "debug": "^4.3.1"
   }
 }

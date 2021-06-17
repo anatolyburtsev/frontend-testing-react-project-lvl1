@@ -43,22 +43,22 @@ describe('tests on page loader', () => {
     const expectedImageContent = loadFixture('nodejs.png');
 
     nock(baseUrl)
-        .get('/courses')
-        .twice()
-        .reply(200, loadFixture('website.html'));
+      .get('/courses')
+      .twice()
+      .reply(200, loadFixture('website.html'));
     nock(baseUrl).get('/assets/professions/nodejs.png')
-        .reply(200, expectedImageContent, {
-          'content-type': 'application/octet-stream',
-          'content-length': expectedImageContent.length,
-          'content-disposition': 'attachment; filename=nodejs.png',
-        });
+      .reply(200, expectedImageContent, {
+        'content-type': 'application/octet-stream',
+        'content-length': expectedImageContent.length,
+        'content-disposition': 'attachment; filename=nodejs.png',
+      });
     nock(baseUrl).get('/packs/js/runtime.js')
-        .reply(200, expectedScriptContent);
+      .reply(200, expectedScriptContent);
     nock(baseUrl).get('/assets/application.css')
-        .reply(500, {});
+      .reply(500, {});
 
     await expect(pageLoader(url, outputDir)).rejects
-        .toThrowError();
+      .toThrowError();
     // .toThrowError(/Failed to download several resources: ru-hexlet-io-assets-application.css/);
   });
 

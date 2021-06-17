@@ -1,87 +1,158 @@
 import axios from 'axios';
-import { writeFile, mkdir } from 'fs/promises';
-import { URL } from 'url';
-import { join, dirname, parse } from 'path';
+import {
+  StatusCodes,
+} from 'http-status-codes';
+import path from 'path';
+import * as cheerio from 'cheerio';
+import _ from 'lodash';
+
+import fs from 'fs/promises';
+import { createWriteStream } from 'fs';
 import debug from 'debug';
-import cheerio from 'cheerio';
+import {
+  isPathWritable, isResourceLocal,
+} from './validators.js';
+import { getFileNameFromUrl, getFileNameFromUrlWithExtension } from './utils.js';
 
-const log = debug('page-loader');
+// don't throw exception on 4xx and 5xx
+// axios.defaults.validateStatus = () => true;
 
-let baseUrl;
-let basePath;
-
-const toFileName = (uri) => {
-  const url = new URL(uri);
-  const ext = parse(url.pathname).ext || '.html';
-  const fileName = [url.host, url.pathname.replace(ext, '')]
-    .filter((el) => el !== '/')
-    .join('')
-    .replace(/\W/g, '-');
-
-  return [fileName, ext].join('');
-};
-
-const saveToFile = async (filePath, content) => {
-  try {
-    await writeFile(filePath, content);
-    log('file %s saved', filePath);
-  } catch (e) {
-    if (e.code !== 'ENOENT') {
-      throw e;
+const processResources = ({
+                            htmlCheerio,
+                            resourceType,
+                            url,
+                            filesFolderPath,
+                            srcTagName = 'src',
+                            skipExternal = false,
+                          }) => {
+  const filesToSave = [];
+  htmlCheerio(resourceType).each(function () {
+    const oldSrc = htmlCheerio(this).attr(srcTagName);
+    if (oldSrc === undefined) {
+      return;
     }
+    const fileUrl = new URL(oldSrc, url);
+    if (skipExternal && !isResourceLocal(url, fileUrl)) {
+      return;
+    }
+    const filename = getFileNameFromUrlWithExtension(fileUrl);
+    filesToSave.push({ fileUrl, filename });
+    const newSrc = path.join(filesFolderPath, filename);
+    htmlCheerio(this).attr(srcTagName, newSrc);
+  });
 
-    await mkdir(dirname(filePath), { recursive: true });
-    await saveToFile(filePath, content);
+  return filesToSave;
+};
+
+const processPage = ({
+                       rawHtmlContent,
+                       url,
+                       filesFolderPath,
+                       log,
+                     }) => {
+  log('Starting parsing html');
+  const $ = cheerio.load(rawHtmlContent);
+
+  const imagesToSave = processResources({
+    htmlCheerio: $,
+    resourceType: 'img',
+    url,
+    filesFolderPath,
+  });
+  log(`${imagesToSave.length} images found`);
+
+  const scriptsToSave = processResources({
+    htmlCheerio: $,
+    resourceType: 'script',
+    url,
+    filesFolderPath,
+    skipExternal: true,
+  });
+  log(`${scriptsToSave.length} scripts found`);
+
+  const linksToSave = processResources({
+    htmlCheerio: $,
+    resourceType: 'link',
+    url,
+    filesFolderPath,
+    skipExternal: true,
+    srcTagName: 'href',
+  });
+  log(`${linksToSave.length} links and css found`);
+
+  const filesToSave = [...imagesToSave, ...scriptsToSave, ...linksToSave];
+  return {
+    content: $.html(),
+    filesToSave,
+  };
+};
+
+const downloadFiles = async ({
+                               filesToSave, filesFolderAbsolutePath, log,
+                             }) => {
+  const uniqFilesToSave = _.uniq(filesToSave);
+  const filenames = uniqFilesToSave.map(({ filename }) => filename).join('\n');
+  log(`Downloading ${uniqFilesToSave.length} files: \n${filenames}`);
+  const fileContents = await Promise.all(
+      uniqFilesToSave.map(({ fileUrl }) => axios.get(fileUrl.href, { responseType: 'stream' })),
+  );
+  const failedToDownload = [];
+
+  uniqFilesToSave.forEach(({ filename }, idx) => {
+    const filePath = path.join(filesFolderAbsolutePath, filename);
+    const fileStream = createWriteStream(filePath);
+    const content = fileContents[idx];
+    if (content.status !== StatusCodes.OK) {
+      failedToDownload.push(filename);
+      log(`failed to download ${filename}`);
+    } else {
+      content.data.pipe(fileStream);
+      log(`saved ${filename}`);
+    }
+  });
+  return {
+    failedToDownload,
+  };
+};
+
+export default async (url, outputPath = process.cwd()) => {
+  const log = debug('page-loader');
+
+  if (!await isPathWritable(outputPath)) {
+    throw new Error(`No permissions to write to ${outputPath}`);
   }
-};
 
-const toResource = (url) => ({
-  originUrl: url,
-  url: new URL(url, new URL(baseUrl).origin),
-  filePath: undefined,
-});
+  const response = await axios.get(url);
+  if (response.status !== StatusCodes.OK) {
+    throw new Error(`Request failed, status code: ${response.status}`);
+  }
 
-const resourceIsLocal = (resource) => new URL(baseUrl).host === resource.url.host;
+  const rawHtmlContent = response.data;
+  const filesFolderPath = getFileNameFromUrl(url, '_files');
+  const filesFolderAbsolutePath = path.join(outputPath, filesFolderPath);
+  await fs.mkdir(filesFolderAbsolutePath);
+  log(`Path to files: ${filesFolderAbsolutePath}`);
 
-const loadResource = async (resource) => {
-  const { data: content } = await axios.get(resource.url.href, { responseType: 'arraybuffer' });
-  const filePath = join(toFileName(baseUrl).replace('.html', '_files'), toFileName(resource.url.href));
-  await saveToFile(join(basePath, filePath), content);
-  return { ...resource, filePath };
-};
+  const processedPage = processPage({
+    rawHtmlContent, url, filesFolderPath, log,
+  });
 
-const loadResources = async (getResourceUrls, replaceContent) => {
-  const resources = getResourceUrls()
-    .map((url) => toResource(url))
-    .filter((resource) => resourceIsLocal(resource));
+  const filepath = path.join(outputPath, getFileNameFromUrl(url, '.html'));
+  await fs.writeFile(filepath, processedPage.content, 'utf-8');
+  log(`main html saved to ${filepath}`);
 
-  const loadedResources = await Promise.all(resources.map(
-    async (resource) => loadResource(resource),
-  ));
-  loadedResources.forEach((resource) => replaceContent(resource));
-};
+  const { failedToDownload } = await downloadFiles({
+    filesToSave: processedPage.filesToSave,
+    filesFolderAbsolutePath,
+    log,
+  });
 
-export default async (url, path = '') => {
-  baseUrl = url; basePath = path;
-  const { data: content } = await axios.get(baseUrl);
-  const $ = cheerio.load(content);
+  if (failedToDownload.length > 0) {
+    throw new Error(`Failed to download several resources: ${failedToDownload}`);
+  }
 
-  const imgs = loadResources(
-    () => $('img').map((i, el) => $(el).attr('src')).toArray(),
-    (resource) => $(`img[src="${resource.originUrl}"]`).attr('src', resource.filePath),
-  );
-  const scripts = loadResources(
-    () => $('script').map((i, el) => $(el).attr('src')).toArray(),
-    (resource) => $(`script[src="${resource.originUrl}"]`).attr('src', resource.filePath),
-  );
-  const links = loadResources(
-    () => $('link').map((i, el) => $(el).attr('href')).toArray(),
-    (resource) => $(`link[href="${resource.originUrl}"]`).attr('href', resource.filePath),
-  );
-
-  await Promise.all([imgs, scripts, links]);
-
-  const filePath = join(basePath, toFileName(baseUrl));
-  await saveToFile(filePath, $.html());
-  return { filepath: filePath };
+  await new Promise((r) => setTimeout(r, 10));
+  return {
+    filepath,
+  };
 };

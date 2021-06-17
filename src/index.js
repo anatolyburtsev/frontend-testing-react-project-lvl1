@@ -18,13 +18,13 @@ import { getFileNameFromUrl, getFileNameFromUrlWithExtension } from './utils.js'
 // axios.defaults.validateStatus = () => true;
 
 const processResources = ({
-                            htmlCheerio,
-                            resourceType,
-                            url,
-                            filesFolderPath,
-                            srcTagName = 'src',
-                            skipExternal = false,
-                          }) => {
+  htmlCheerio,
+  resourceType,
+  url,
+  filesFolderPath,
+  srcTagName = 'src',
+  skipExternal = false,
+}) => {
   const filesToSave = [];
   htmlCheerio(resourceType).each(function () {
     const oldSrc = htmlCheerio(this).attr(srcTagName);
@@ -45,11 +45,11 @@ const processResources = ({
 };
 
 const processPage = ({
-                       rawHtmlContent,
-                       url,
-                       filesFolderPath,
-                       log,
-                     }) => {
+  rawHtmlContent,
+  url,
+  filesFolderPath,
+  log,
+}) => {
   log('Starting parsing html');
   const $ = cheerio.load(rawHtmlContent);
 
@@ -88,13 +88,13 @@ const processPage = ({
 };
 
 const downloadFiles = async ({
-                               filesToSave, filesFolderAbsolutePath, log,
-                             }) => {
+  filesToSave, filesFolderAbsolutePath, log,
+}) => {
   const uniqFilesToSave = _.uniq(filesToSave);
   const filenames = uniqFilesToSave.map(({ filename }) => filename).join('\n');
   log(`Downloading ${uniqFilesToSave.length} files: \n${filenames}`);
   const fileContents = await Promise.all(
-      uniqFilesToSave.map(({ fileUrl }) => axios.get(fileUrl.href, { responseType: 'stream' })),
+    uniqFilesToSave.map(({ fileUrl }) => axios.get(fileUrl.href, { responseType: 'stream' })),
   );
   const failedToDownload = [];
 

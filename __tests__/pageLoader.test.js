@@ -110,7 +110,12 @@ describe('tests on page loader', () => {
 
     await expect(pageLoader(url, outputDir)).rejects
       .toThrowError();
-    // .toThrowError(/Failed to download several resources: ru-hexlet-io-assets-application.css/);
+  // .toThrowError(/Failed to download several resources: ru-hexlet-io-assets-application.css/);
+  });
+
+  test.skip('should return error if url invalid', async () => {
+    const invalidUrl = 'htp://ya.ru';
+    await expect(pageLoader(invalidUrl, outputDir)).rejects.toThrowError(/Invalid url/);
   });
 
   test('should return error if server returns 4XX', async () => {
@@ -123,7 +128,7 @@ describe('tests on page loader', () => {
 
   test("should return error if doesn't have write permissions to the output dir",
     async () => {
-      const notWritablePath = '/p4roc';
+      const notWritablePath = '/proc';
       await expect(pageLoader('http://ya.ru/', notWritablePath)).rejects.toThrowError(/No permissions to write/);
     });
 });

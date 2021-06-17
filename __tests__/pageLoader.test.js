@@ -12,7 +12,7 @@ import pageLoader from '../src/index.js';
 // const __dirname = path.dirname(__filename);
 
 const loadFixture = (filename) => {
-  const pathToFixtures = path.resolve(__dirname, '../__fixtures__/', filename);
+  const pathToFixtures = path.resolve(__dirname, '../__fixture__/', filename);
   return readFileSync(pathToFixtures, 'utf8');
 };
 

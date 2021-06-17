@@ -17,7 +17,7 @@ import { getFileNameFromUrl, getFileNameFromUrlWithExtension } from './utils.js'
 // don't throw exception on 4xx and 5xx
 axios.defaults.validateStatus = () => true;
 
-const processResources = ({
+const processResourceType = ({
   htmlCheerio,
   resourceType,
   url,
@@ -53,7 +53,7 @@ const processPage = ({
   log('Starting parsing html');
   const $ = cheerio.load(htmlContent);
 
-  const imagesToSave = processResources({
+  const imagesToSave = processResourceType({
     htmlCheerio: $,
     resourceType: 'img',
     url,
@@ -61,7 +61,7 @@ const processPage = ({
   });
   log(`${imagesToSave.length} images found`);
 
-  const scriptsToSave = processResources({
+  const scriptsToSave = processResourceType({
     htmlCheerio: $,
     resourceType: 'script',
     url,
@@ -70,7 +70,7 @@ const processPage = ({
   });
   log(`${scriptsToSave.length} scripts found`);
 
-  const linksToSave = processResources({
+  const linksToSave = processResourceType({
     htmlCheerio: $,
     resourceType: 'link',
     url,

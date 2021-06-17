@@ -8,7 +8,7 @@ import * as axiosdebuglog from 'axios-debug-log';
 import pageLoader from '../src/index.js';
 
 const loadFixture = (filename) => {
-  const pathToFixtures = path.resolve(__dirname, '../__fixture__/', filename);
+  const pathToFixtures = path.resolve(__dirname, '../__fixtures__/', filename);
   return readFileSync(pathToFixtures, 'utf8');
 };
 
@@ -38,7 +38,7 @@ describe('tests on page loader, positive', () => {
   test('should send http request and save file', async () => {
     const filesDir = 'ru-hexlet-io-courses_files';
     const expectedHTMLFilePath = path.join(outputDir, 'ru-hexlet-io-courses.html');
-    const expectedHTMLFileContent = loadFixture('websiteSaved.html');
+    const expectedHTMLFileContent = loadFixture('websiteExpected.html');
     const expectedImagePath = path.join(outputDir, filesDir,
       'ru-hexlet-io-assets-professions-nodejs.png');
     const expectedImageContent = loadFixture('nodejs.png');

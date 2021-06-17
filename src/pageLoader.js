@@ -145,6 +145,7 @@ export default async (url, outputPath = process.cwd()) => {
     filesFolderAbsolutePath,
     log,
   });
+  log(`files saved to ${filesFolderAbsolutePath}`);
 
   if (failedToDownload.length > 0) {
     throw new Error(`Failed to download several resources: ${failedToDownload}`);

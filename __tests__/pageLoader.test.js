@@ -134,7 +134,7 @@ describe('tests on page loader, negative cases', () => {
 
   test("should return error if doesn't have write permissions to the output dir",
     async () => {
-      const notWritablePath = '/pr4oc';
+      const notWritablePath = '/proc';
       await expect(pageLoader(url, notWritablePath)).rejects.toThrowError(/No permissions to write/);
     });
 });

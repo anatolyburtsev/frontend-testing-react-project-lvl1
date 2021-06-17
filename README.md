@@ -7,7 +7,7 @@ loads html and local resources from url and saves them to disk
 
 ### Use
 `make install`  
-`./bin/page-loader.js https://domain.com/path /path/to/save`
+`./bin/page-index.js https://domain.com/path /path/to/save`
 
 ## Демонстрация
 

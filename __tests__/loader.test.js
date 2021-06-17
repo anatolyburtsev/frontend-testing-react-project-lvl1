@@ -3,7 +3,7 @@ import { existsSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import nock from 'nock';
-import load from '../src/loader.js';
+import load from '../src/index.js';
 
 const readFixture = async (...paths) => readFile(join(__dirname, '..', '__fixtures__', ...paths), 'utf-8');
 

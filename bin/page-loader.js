@@ -2,7 +2,7 @@
 
 import { program } from 'commander';
 import { cwd } from 'process';
-import load from '../src/loader.js';
+import load from '../src/index.js';
 
 const run = async (url, options) => {
   try {

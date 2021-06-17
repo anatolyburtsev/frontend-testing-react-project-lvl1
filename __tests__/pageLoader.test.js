@@ -117,7 +117,7 @@ describe('tests on page loader, negative cases', () => {
       .reply(500, {});
 
     await expect(pageLoader(url, outputDir)).rejects
-      .toThrowError(/Failed to download several resources: ru-hexlet-io-assets-application.css/);
+      .toThrowError(/Failed to save .* Request failed with status code 500/);
   });
 
   test.skip('should return error if url invalid', async () => {

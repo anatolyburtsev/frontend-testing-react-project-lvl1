@@ -7,15 +7,11 @@ import * as cheerio from 'cheerio';
 import _ from 'lodash';
 
 import fs from 'fs/promises';
-import { createWriteStream } from 'fs';
 import debug from 'debug';
 import {
   isPathWritable, isResourceLocal,
 } from './validators.js';
 import { getFileNameFromUrl, getFileNameFromUrlWithExtension } from './utils.js';
-
-// don't throw exception on 4xx and 5xx
-axios.defaults.validateStatus = () => true;
 
 const processResourceType = ({
   htmlCheerio,
@@ -87,32 +83,26 @@ const processPage = ({
   };
 };
 
+const downloadAndSave = async (url, filepath, log) => axios.get(url, { responseType: 'arraybuffer' })
+  .then((response) => fs.writeFile(filepath, response.data))
+  .then(() => log(`${filepath} saved`))
+  .catch((error) => {
+    throw new Error(`Failed to save ${filepath}. error: ${error.message}`);
+  });
+
 const downloadFiles = async ({
   filesToSave, filesFolderAbsolutePath, log,
 }) => {
   const uniqFilesToSave = _.uniq(filesToSave);
   const filenames = uniqFilesToSave.map(({ filename }) => filename).join('\n');
   log(`Downloading ${uniqFilesToSave.length} files: \n${filenames}`);
-  const fileContents = await Promise.all(
-    uniqFilesToSave.map(({ fileUrl }) => axios.get(fileUrl.href, { responseType: 'stream' })),
-  );
-  const failedToDownload = [];
+  return Promise.all(
+    uniqFilesToSave.map(
+      ({ fileUrl, filename }) => downloadAndSave(fileUrl.href,
+        path.join(filesFolderAbsolutePath, filename), log),
+    ),
 
-  uniqFilesToSave.forEach(({ filename }, idx) => {
-    const filePath = path.join(filesFolderAbsolutePath, filename);
-    const fileStream = createWriteStream(filePath);
-    const content = fileContents[idx];
-    if (content.status !== StatusCodes.OK) {
-      failedToDownload.push(filename);
-      log(`failed to download ${filename}`);
-    } else {
-      content.data.pipe(fileStream);
-      log(`saved ${filename}`);
-    }
-  });
-  return {
-    failedToDownload,
-  };
+  );
 };
 
 export default async (url, outputPath = process.cwd()) => {
@@ -140,19 +130,12 @@ export default async (url, outputPath = process.cwd()) => {
   await fs.writeFile(mainHTMLFilePath, processedPage.content, 'utf-8');
   log(`main html saved to ${mainHTMLFilePath}`);
 
-  const { failedToDownload } = await downloadFiles({
+  await downloadFiles({
     filesToSave: processedPage.filesToSave,
     filesFolderAbsolutePath,
     log,
   });
   log(`files saved to ${filesFolderAbsolutePath}`);
-
-  if (failedToDownload.length > 0) {
-    throw new Error(`Failed to download several resources: ${failedToDownload}`);
-  }
-
-  // Why downloaded resources are empty without next line?
-  await new Promise((r) => setTimeout(r, 10));
 
   return {
     filepath: mainHTMLFilePath,

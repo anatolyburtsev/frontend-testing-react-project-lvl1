@@ -83,5 +83,5 @@ export default async (url, path = '') => {
 
   const filePath = join(basePath, toFileName(baseUrl));
   await saveToFile(filePath, $.html());
-  return filePath;
+  return { filepath: filePath };
 };

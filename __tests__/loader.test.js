@@ -33,8 +33,8 @@ describe('positive cases', () => {
     const loadedHtml = await readFixture('expected', 'site.html');
     const result = await load('https://site.com/path', path);
 
-    expect(result).toEqual(join(path, 'site-com-path.html'));
-    expect(await readFile(result, 'utf-8')).toEqual(loadedHtml);
+    expect(result.filepath).toEqual(join(path, 'site-com-path.html'));
+    expect(await readFile(result.filepath, 'utf-8')).toEqual(loadedHtml);
   });
 
   test.each(resources)('resource %s', async (resource) => {

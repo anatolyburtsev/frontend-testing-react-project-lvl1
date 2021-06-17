@@ -7,7 +7,8 @@ import load from '../src/loader.js';
 const run = async (url, options) => {
   try {
     const { output } = options;
-    console.log(await load(url, output));
+    const { filepath } = await load(url, output);
+    console.log(filepath);
   } catch (e) {
     console.error(e.message);
     process.exit(1);

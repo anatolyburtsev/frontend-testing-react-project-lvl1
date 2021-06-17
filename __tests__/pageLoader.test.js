@@ -128,7 +128,7 @@ describe('tests on page loader', () => {
 
   test("should return error if doesn't have write permissions to the output dir",
     async () => {
-      const notWritablePath = '/proc';
+      const notWritablePath = '/pr4oc';
       await expect(pageLoader('http://ya.ru/', notWritablePath)).rejects.toThrowError(/No permissions to write/);
     });
 });

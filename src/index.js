@@ -15,7 +15,7 @@ import {
 import { getFileNameFromUrl, getFileNameFromUrlWithExtension } from './utils.js';
 
 // don't throw exception on 4xx and 5xx
-// axios.defaults.validateStatus = () => true;
+axios.defaults.validateStatus = () => true;
 
 const processResources = ({
   htmlCheerio,

@@ -12,7 +12,7 @@ const loadFixture = (filename) => {
   return readFileSync(pathToFixtures, 'utf8');
 };
 
-const checkFile = async (filePath, fileContent) => {
+const checkFile = (filePath, fileContent) => {
   const content = readFileSync(filePath, 'utf-8');
   expect(content).toEqual(fileContent);
 };
@@ -71,11 +71,11 @@ describe('tests on page loader, positive', () => {
 
     expect(filepath).toEqual(expectedHTMLFilePath);
 
-    await checkFile(expectedHTMLFilePath, expectedHTMLFileContent);
-    await checkFile(expectedImagePath, expectedImageContent);
-    await checkFile(expectedCssPath, expectedCssContent);
-    await checkFile(expectedScriptPath, expectedScriptContent);
-    await checkFile(expectedHTMLLinkFilePath, expectedHTMLLinkContent);
+    checkFile(expectedHTMLFilePath, expectedHTMLFileContent);
+    checkFile(expectedImagePath, expectedImageContent);
+    checkFile(expectedCssPath, expectedCssContent);
+    checkFile(expectedScriptPath, expectedScriptContent);
+    checkFile(expectedHTMLLinkFilePath, expectedHTMLLinkContent);
 
     expect(imageScope.isDone()).toBeTruthy();
     expect(mainHTMLScope.isDone()).toBeTruthy();

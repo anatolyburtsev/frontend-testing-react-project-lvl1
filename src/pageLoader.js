@@ -45,13 +45,13 @@ const processResources = ({
 };
 
 const processPage = ({
-  rawHtmlContent,
+  htmlContent,
   url,
   filesFolderPath,
   log,
 }) => {
   log('Starting parsing html');
-  const $ = cheerio.load(rawHtmlContent);
+  const $ = cheerio.load(htmlContent);
 
   const imagesToSave = processResources({
     htmlCheerio: $,
@@ -127,19 +127,18 @@ export default async (url, outputPath = process.cwd()) => {
     throw new Error(`Request failed, status code: ${response.status}`);
   }
 
-  const rawHtmlContent = response.data;
   const filesFolderPath = getFileNameFromUrl(url, '_files');
   const filesFolderAbsolutePath = path.join(outputPath, filesFolderPath);
   await fs.mkdir(filesFolderAbsolutePath);
   log(`Path to files: ${filesFolderAbsolutePath}`);
 
   const processedPage = processPage({
-    rawHtmlContent, url, filesFolderPath, log,
+    htmlContent: response.data, url, filesFolderPath, log,
   });
 
-  const filepath = path.join(outputPath, getFileNameFromUrl(url, '.html'));
-  await fs.writeFile(filepath, processedPage.content, 'utf-8');
-  log(`main html saved to ${filepath}`);
+  const mainHTMLFilePath = path.join(outputPath, getFileNameFromUrl(url, '.html'));
+  await fs.writeFile(mainHTMLFilePath, processedPage.content, 'utf-8');
+  log(`main html saved to ${mainHTMLFilePath}`);
 
   const { failedToDownload } = await downloadFiles({
     filesToSave: processedPage.filesToSave,
@@ -151,8 +150,10 @@ export default async (url, outputPath = process.cwd()) => {
     throw new Error(`Failed to download several resources: ${failedToDownload}`);
   }
 
+  // Why downloaded resources are empty without next line?
   await new Promise((r) => setTimeout(r, 10));
+
   return {
-    filepath,
+    filepath: mainHTMLFilePath,
   };
 };

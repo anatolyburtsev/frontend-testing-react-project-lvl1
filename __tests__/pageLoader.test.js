@@ -3,6 +3,7 @@ import { readFileSync } from 'fs';
 import path from 'path';
 import os from 'os';
 import nock from 'nock';
+import _ from 'lodash';
 // eslint-disable-next-line
 import * as axiosdebuglog from 'axios-debug-log';
 import pageLoader from '../src/index.js';
@@ -21,70 +22,71 @@ let outputDir = '';
 const baseUrl = 'https://ru.hexlet.io';
 const urlPath = '/courses';
 const url = `${baseUrl}${urlPath}`;
+const assetsInitial = Object.freeze({
+  image: {
+    fixturePath: 'expected/nodejs.png',
+    expectedPath: 'ru-hexlet-io-assets-professions-nodejs.png',
+    url: '/assets/professions/nodejs.png',
+  },
+  css: {
+    fixturePath: 'expected/application.css',
+    expectedPath: 'ru-hexlet-io-assets-application.css',
+    url: '/assets/application.css',
+  },
+  script: {
+    fixturePath: 'expected/runtime.js',
+    expectedPath: 'ru-hexlet-io-packs-js-runtime.js',
+    url: '/packs/js/runtime.js',
+  },
+  html: {
+    fixturePath: 'website.html',
+    expectedPath: 'ru-hexlet-io-courses.html',
+    url: urlPath,
+    times: 2,
+  },
+});
+const filesDir = 'ru-hexlet-io-courses_files';
 
-describe('tests on page loader, positive', () => {
+describe('page loader, positive cases', () => {
+  let assets = {};
   beforeEach(async () => {
     outputDir = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
+    assets = _.cloneDeep(assetsInitial);
+    Object.entries(assets).forEach(([assetName, asset]) => {
+      const fixtureContent = loadFixture(asset.fixturePath);
+      const times = asset.times ? asset.times : 1;
+      const scope = nock(baseUrl)
+        .get(asset.url)
+        .times(times)
+        .reply(200, fixtureContent);
+      assets[assetName].scope = scope;
+      assets[assetName].fixtureContent = fixtureContent;
+    });
   });
-
   beforeAll(() => {
     nock.disableNetConnect();
   });
-
   afterEach(() => {
     nock.cleanAll();
   });
 
-  test('should send http request and save file', async () => {
-    const filesDir = 'ru-hexlet-io-courses_files';
-    const expectedHTMLFilePath = path.join(outputDir, 'ru-hexlet-io-courses.html');
-    const expectedHTMLFileContent = loadFixture('websiteExpected.html');
-    const expectedImagePath = path.join(outputDir, filesDir,
-      'ru-hexlet-io-assets-professions-nodejs.png');
-    const expectedImageContent = loadFixture('nodejs.png');
-    const expectedCssPath = path.join(outputDir, filesDir,
-      'ru-hexlet-io-assets-application.css');
-    const expectedCssContent = loadFixture('application.css');
-    const expectedScriptPath = path.join(outputDir, filesDir,
-      'ru-hexlet-io-packs-js-runtime.js');
-    const expectedScriptContent = loadFixture('runtime.js');
-    const expectedHTMLLinkFilePath = path.join(outputDir, filesDir,
-      'ru-hexlet-io-courses.html');
-    const expectedHTMLLinkContent = loadFixture('website.html');
+  test.each(Object.keys(assetsInitial))('verify that %s saved correctly', async (assetType) => {
+    const asset = assets[assetType];
+    await pageLoader(url, outputDir);
+    checkFile(path.join(outputDir, filesDir, asset.expectedPath), asset.fixtureContent);
+    expect(asset.scope.isDone()).toBeTruthy();
+  });
 
-    const mainHTMLScope = nock(baseUrl)
-      .get(urlPath)
-      .twice()
-      .reply(200, loadFixture('website.html'));
-    const imageScope = nock(baseUrl).get('/assets/professions/nodejs.png')
-      .reply(200, expectedImageContent, {
-        'content-type': 'application/octet-stream',
-        'content-length': expectedImageContent.length,
-        'content-disposition': 'attachment; filename=nodejs.png',
-      });
-    const cssScope = nock(baseUrl).get('/assets/application.css')
-      .reply(200, expectedCssContent);
-    const scriptScope = nock(baseUrl).get('/packs/js/runtime.js')
-      .reply(200, expectedScriptContent);
-
-    const { filepath } = await pageLoader(url, outputDir);
-
-    expect(filepath).toEqual(expectedHTMLFilePath);
-
-    checkFile(expectedHTMLFilePath, expectedHTMLFileContent);
-    checkFile(expectedImagePath, expectedImageContent);
-    checkFile(expectedCssPath, expectedCssContent);
-    checkFile(expectedScriptPath, expectedScriptContent);
-    checkFile(expectedHTMLLinkFilePath, expectedHTMLLinkContent);
-
-    expect(imageScope.isDone()).toBeTruthy();
-    expect(mainHTMLScope.isDone()).toBeTruthy();
-    expect(cssScope.isDone()).toBeTruthy();
-    expect(scriptScope.isDone()).toBeTruthy();
+  test('verify that main html saved correctly', async () => {
+    const response = await pageLoader(url, outputDir);
+    const expectedPath = path.join(outputDir, 'ru-hexlet-io-courses.html');
+    expect(response).toEqual({ filepath: expectedPath });
+    const expectedContent = loadFixture('expected/website.html');
+    checkFile(expectedPath, expectedContent);
   });
 });
 
-describe('tests on page loader, negative cases', () => {
+describe('page loader, negative cases', () => {
   beforeEach(async () => {
     outputDir = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
   });
@@ -97,39 +99,20 @@ describe('tests on page loader, negative cases', () => {
     nock.cleanAll();
   });
 
-  test('should return error if url is unavailable', async () => {
-    const expectedScriptContent = loadFixture('runtime.js');
-    const expectedImageContent = loadFixture('nodejs.png');
-
+  test.each([404, 503])('should return error if server returns %d', async (httpCode) => {
     nock(baseUrl)
       .get(urlPath)
-      .twice()
-      .reply(200, loadFixture('website.html'));
-    nock(baseUrl).get('/assets/professions/nodejs.png')
-      .reply(200, expectedImageContent, {
-        'content-type': 'application/octet-stream',
-        'content-length': expectedImageContent.length,
-        'content-disposition': 'attachment; filename=nodejs.png',
-      });
-    nock(baseUrl).get('/packs/js/runtime.js')
-      .reply(200, expectedScriptContent);
-    nock(baseUrl).get('/assets/application.css')
-      .reply(500, {});
-
-    await expect(pageLoader(url, outputDir)).rejects
-      .toThrowError(/Failed to save .* Request failed with status code 500/);
-  });
-
-  test.skip('should return error if url invalid', async () => {
-    const invalidUrl = 'htp://ya.ru';
-    await expect(pageLoader(invalidUrl, outputDir)).rejects.toThrowError(/Invalid url/);
-  });
-
-  test('should return error if server returns 4XX', async () => {
-    nock(baseUrl)
-      .get(urlPath)
-      .reply(404, {});
+      .reply(httpCode, {});
     await expect(pageLoader(url, outputDir)).rejects.toThrowError(/Request failed/);
+  });
+
+  test('should return error if resources unavailable', async () => {
+    nock(baseUrl)
+      .get(urlPath)
+      .reply(200, loadFixture('website.html'))
+      .get(/.*/)
+      .reply(500, {});
+    await expect(pageLoader(url, outputDir)).rejects.toThrowError(/Failed to save/);
   });
 
   test("should return error if doesn't have write permissions to the output dir",

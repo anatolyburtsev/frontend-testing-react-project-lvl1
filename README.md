@@ -10,19 +10,28 @@
 ```shell
 $ npx babel-node bin/page-loader --output /var/tmp https://ru.hexlet.io/courses
 ```
-[![asciicast](https://asciinema.org/a/Ul9zYCVhJnqN1rquPIvx1SAwd.svg)](https://asciinema.org/a/Ul9zYCVhJnqN1rquPIvx1SAwd)
+[![asciicast](https://asciinema.org/a/qnXG7IBTkrSHmNDJCad9kVqx8.svg)](https://asciinema.org/a/qnXG7IBTkrSHmNDJCad9kVqx8)
 
 ## Usage with logging
 ```shell
 DEBUG=page-loader npx babel-node bin/page-loader --output /tmp/hexlet https://ru.hexlet.io/u/onotole
 ```
 
-[![asciicast](https://asciinema.org/a/cUJd2rjAt6CsMazZrmDzZBk4v.svg)](https://asciinema.org/a/cUJd2rjAt6CsMazZrmDzZBk4v)
+[![asciicast](https://asciinema.org/a/0DMRYm78NXohtC7bS4sXhJgfV.svg)](https://asciinema.org/a/0DMRYm78NXohtC7bS4sXhJgfV)
 
 ## Error presenting
-[![asciicast](https://asciinema.org/a/ta8SnD2tqzDhDUY2u2meKCj3c.svg)](https://asciinema.org/a/ta8SnD2tqzDhDUY2u2meKCj3c)
+[![asciicast](https://asciinema.org/a/GIOTZ9IRP4f4rl5gHYETrdloB.svg)](https://asciinema.org/a/GIOTZ9IRP4f4rl5gHYETrdloB)
+
+## run tests
+```shell
+make test
+```
+
+[![asciicast](https://asciinema.org/a/7te6BNBLdaNU7Ud8U4Y32jcv9.svg)](https://asciinema.org/a/7te6BNBLdaNU7Ud8U4Y32jcv9)
+
 
 ## run tests with full debug
 ```shell
 DEBUG=axios,nock.*,page-loader make test
 ```
+[![asciicast](https://asciinema.org/a/TPE5aaX96bsaKuniOr360Yih4.svg)](https://asciinema.org/a/TPE5aaX96bsaKuniOr360Yih4)

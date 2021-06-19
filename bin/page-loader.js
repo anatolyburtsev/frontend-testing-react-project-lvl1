@@ -13,7 +13,7 @@ program
   .action(async (url, options) => {
     try {
       const { filepath } = await pageLoader(url, options.output);
-      console.log(filepath);
+      console.log(`page successfully saved to ${filepath}`);
     } catch (e) {
       console.error(e);
       process.exit(1);

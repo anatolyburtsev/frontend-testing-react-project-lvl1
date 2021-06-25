@@ -7,7 +7,7 @@ import pageLoader from '../src/index.js';
 
 const loadFixture = async (filename) => {
   const pathToFixtures = path.resolve(__dirname, '../__fixtures__/', filename);
-  return await fs.readFile(pathToFixtures, 'utf8');
+  return fs.readFile(pathToFixtures, 'utf8');
 };
 
 let outputDir = '';
@@ -39,9 +39,8 @@ const assetsInitial = Object.freeze({
 });
 const filesDir = 'ru-hexlet-io-courses_files';
 
-beforeAll(() => {
-  nock.disableNetConnect();
-});
+nock.disableNetConnect();
+
 afterEach(() => {
   nock.cleanAll();
 });
@@ -51,7 +50,7 @@ describe('page loader, positive cases', () => {
   beforeEach(async () => {
     outputDir = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
     assets = _.cloneDeep(assetsInitial);
-    for (const [assetName, asset] of Object.entries(assets)) {
+    await Promise.all(Object.entries(assets).map(async ([assetName, asset]) => {
       const fixtureContent = await loadFixture(asset.fixturePath);
       const times = asset.times ? asset.times : 1;
       const scope = nock(baseUrl)
@@ -60,9 +59,8 @@ describe('page loader, positive cases', () => {
         .reply(200, fixtureContent);
       assets[assetName].scope = scope;
       assets[assetName].fixtureContent = fixtureContent;
-    }
+    }));
   });
-
 
   test.each(Object.keys(assetsInitial))('verify that %s saved correctly', async (assetType) => {
     const asset = assets[assetType];
@@ -86,14 +84,6 @@ describe('page loader, positive cases', () => {
 describe('page loader, negative cases', () => {
   beforeEach(async () => {
     outputDir = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
-  });
-
-  beforeAll(() => {
-    nock.disableNetConnect();
-  });
-
-  afterEach(() => {
-    nock.cleanAll();
   });
 
   test.each([404, 503])('should return error if server returns %d', async (httpCode) => {

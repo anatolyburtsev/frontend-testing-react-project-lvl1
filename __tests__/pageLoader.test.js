@@ -1,21 +1,13 @@
 import fs from 'fs/promises';
-import { readFileSync } from 'fs';
 import path from 'path';
 import os from 'os';
 import nock from 'nock';
 import _ from 'lodash';
-// eslint-disable-next-line
-import * as axiosdebuglog from 'axios-debug-log';
 import pageLoader from '../src/index.js';
 
-const loadFixture = (filename) => {
+const loadFixture = async (filename) => {
   const pathToFixtures = path.resolve(__dirname, '../__fixtures__/', filename);
-  return readFileSync(pathToFixtures, 'utf8');
-};
-
-const checkFile = (filePath, fileContent) => {
-  const content = readFileSync(filePath, 'utf-8');
-  expect(content).toEqual(fileContent);
+  return await fs.readFile(pathToFixtures, 'utf8');
 };
 
 let outputDir = '';
@@ -47,13 +39,20 @@ const assetsInitial = Object.freeze({
 });
 const filesDir = 'ru-hexlet-io-courses_files';
 
+beforeAll(() => {
+  nock.disableNetConnect();
+});
+afterEach(() => {
+  nock.cleanAll();
+});
+
 describe('page loader, positive cases', () => {
   let assets = {};
   beforeEach(async () => {
     outputDir = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
     assets = _.cloneDeep(assetsInitial);
-    Object.entries(assets).forEach(([assetName, asset]) => {
-      const fixtureContent = loadFixture(asset.fixturePath);
+    for (const [assetName, asset] of Object.entries(assets)) {
+      const fixtureContent = await loadFixture(asset.fixturePath);
       const times = asset.times ? asset.times : 1;
       const scope = nock(baseUrl)
         .get(asset.url)
@@ -61,19 +60,16 @@ describe('page loader, positive cases', () => {
         .reply(200, fixtureContent);
       assets[assetName].scope = scope;
       assets[assetName].fixtureContent = fixtureContent;
-    });
+    }
   });
-  beforeAll(() => {
-    nock.disableNetConnect();
-  });
-  afterEach(() => {
-    nock.cleanAll();
-  });
+
 
   test.each(Object.keys(assetsInitial))('verify that %s saved correctly', async (assetType) => {
     const asset = assets[assetType];
     await pageLoader(url, outputDir);
-    checkFile(path.join(outputDir, filesDir, asset.expectedPath), asset.fixtureContent);
+    const content = await fs.readFile(path.join(outputDir, filesDir, asset.expectedPath), 'utf-8');
+
+    expect(content).toEqual(asset.fixtureContent);
     expect(asset.scope.isDone()).toBeTruthy();
   });
 
@@ -81,8 +77,9 @@ describe('page loader, positive cases', () => {
     const response = await pageLoader(url, outputDir);
     const expectedPath = path.join(outputDir, 'ru-hexlet-io-courses.html');
     expect(response).toEqual({ filepath: expectedPath });
-    const expectedContent = loadFixture('expected/website.html');
-    checkFile(expectedPath, expectedContent);
+    const expectedContent = await loadFixture('expected/website.html');
+    const content = await fs.readFile(expectedPath, 'utf-8');
+    expect(content).toEqual(expectedContent);
   });
 });
 
@@ -109,7 +106,7 @@ describe('page loader, negative cases', () => {
   test('should return error if resources unavailable', async () => {
     nock(baseUrl)
       .get(urlPath)
-      .reply(200, loadFixture('website.html'))
+      .reply(200, await loadFixture('website.html'))
       .get(/.*/)
       .reply(500, {});
     await expect(pageLoader(url, outputDir)).rejects.toThrowError(/Failed to save/);

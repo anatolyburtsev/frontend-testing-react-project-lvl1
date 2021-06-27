@@ -5,7 +5,7 @@ import nock from 'nock';
 import _ from 'lodash';
 import pageLoader from '../src/index.js';
 
-const loadFixture = async (filename) => {
+const loadFixture = (filename) => {
   const pathToFixtures = path.resolve(__dirname, '../__fixtures__/', filename);
   return fs.readFile(pathToFixtures, 'utf8');
 };
@@ -45,10 +45,13 @@ afterEach(() => {
   nock.cleanAll();
 });
 
+beforeEach(async () => {
+  outputDir = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
+});
+
 describe('page loader, positive cases', () => {
   let assets = {};
   beforeEach(async () => {
-    outputDir = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
     assets = _.cloneDeep(assetsInitial);
     await Promise.all(Object.entries(assets).map(async ([assetName, asset]) => {
       const fixtureContent = await loadFixture(asset.fixturePath);
@@ -82,10 +85,6 @@ describe('page loader, positive cases', () => {
 });
 
 describe('page loader, negative cases', () => {
-  beforeEach(async () => {
-    outputDir = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
-  });
-
   test.each([404, 503])('should return error if server returns %d', async (httpCode) => {
     nock(baseUrl)
       .get(urlPath)
@@ -96,9 +95,12 @@ describe('page loader, negative cases', () => {
   test('should return error if resources unavailable', async () => {
     nock(baseUrl)
       .get(urlPath)
-      .reply(200, await loadFixture('website.html'))
-      .get(/.*/)
-      .reply(500, {});
+      .reply(200, await loadFixture('website.html'));
+    Object.values(assetsInitial).forEach((asset) => {
+      nock(baseUrl)
+        .get(asset.url)
+        .reply(404, {});
+    });
     await expect(pageLoader(url, outputDir)).rejects.toThrowError(/Failed to save/);
   });
 

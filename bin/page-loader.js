@@ -15,7 +15,7 @@ program
       const { filepath } = await pageLoader(url, options.output);
       console.log(`page successfully saved to ${filepath}`);
     } catch (e) {
-      console.error(e);
+      console.error(e.message);
       process.exit(1);
     }
   });

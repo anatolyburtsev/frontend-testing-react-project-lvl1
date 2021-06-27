@@ -5,13 +5,14 @@ import {
 import path from 'path';
 import * as cheerio from 'cheerio';
 import _ from 'lodash';
-
 import fs from 'fs/promises';
 import debug from 'debug';
 import {
   isPathWritable, isResourceLocal,
 } from './validators.js';
 import { getFileNameFromUrl, getFileNameFromUrlWithExtension } from './utils.js';
+
+const log = debug('page-loader');
 
 const processResourceType = ({
   htmlCheerio,
@@ -36,27 +37,24 @@ const processResourceType = ({
     const newSrc = path.join(filesFolderPath, filename);
     htmlCheerio(this).attr(srcTagName, newSrc);
   });
-
   return filesToSave;
 };
-
 const processPage = ({
   htmlContent,
   url,
   filesFolderPath,
-  log,
 }) => {
   log('Starting parsing html');
-  const $ = cheerio.load(htmlContent);
 
+  const $ = cheerio.load(htmlContent);
   const imagesToSave = processResourceType({
     htmlCheerio: $,
     resourceType: 'img',
     url,
     filesFolderPath,
   });
-  log(`${imagesToSave.length} images found`);
 
+  log(`${imagesToSave.length} images found`);
   const scriptsToSave = processResourceType({
     htmlCheerio: $,
     resourceType: 'script',
@@ -64,8 +62,8 @@ const processPage = ({
     filesFolderPath,
     skipExternal: true,
   });
-  log(`${scriptsToSave.length} scripts found`);
 
+  log(`${scriptsToSave.length} scripts found`);
   const linksToSave = processResourceType({
     htmlCheerio: $,
     resourceType: 'link',
@@ -74,8 +72,8 @@ const processPage = ({
     skipExternal: true,
     srcTagName: 'href',
   });
-  log(`${linksToSave.length} links and css found`);
 
+  log(`${linksToSave.length} links and css found`);
   const filesToSave = [...imagesToSave, ...scriptsToSave, ...linksToSave];
   return {
     content: $.html(),
@@ -83,15 +81,14 @@ const processPage = ({
   };
 };
 
-const downloadAndSave = async (url, filepath, log) => axios.get(url, { responseType: 'arraybuffer' })
+const downloadAndSave = (url, filepath) => axios.get(url, { responseType: 'arraybuffer' })
   .then((response) => fs.writeFile(filepath, response.data))
   .then(() => log(`${filepath} saved`))
   .catch((error) => {
     throw new Error(`Failed to save ${filepath}. error: ${error.message}`);
   });
-
-const downloadFiles = async ({
-  filesToSave, filesFolderAbsolutePath, log,
+const downloadFiles = ({
+  filesToSave, filesFolderAbsolutePath,
 }) => {
   const uniqFilesToSave = _.uniq(filesToSave);
   const filenames = uniqFilesToSave.map(({ filename }) => filename).join('\n');
@@ -99,15 +96,13 @@ const downloadFiles = async ({
   return Promise.all(
     uniqFilesToSave.map(
       ({ fileUrl, filename }) => downloadAndSave(fileUrl.href,
-        path.join(filesFolderAbsolutePath, filename), log),
+        path.join(filesFolderAbsolutePath, filename)),
     ),
 
   );
 };
 
 export default async (url, outputPath = process.cwd()) => {
-  const log = debug('page-loader');
-
   if (!await isPathWritable(outputPath)) {
     throw new Error(`No permissions to write to ${outputPath}`);
   }
@@ -123,7 +118,7 @@ export default async (url, outputPath = process.cwd()) => {
   log(`Path to files: ${filesFolderAbsolutePath}`);
 
   const processedPage = processPage({
-    htmlContent: response.data, url, filesFolderPath, log,
+    htmlContent: response.data, url, filesFolderPath,
   });
 
   const mainHTMLFilePath = path.join(outputPath, getFileNameFromUrl(url, '.html'));
@@ -133,7 +128,6 @@ export default async (url, outputPath = process.cwd()) => {
   await downloadFiles({
     filesToSave: processedPage.filesToSave,
     filesFolderAbsolutePath,
-    log,
   });
   log(`files saved to ${filesFolderAbsolutePath}`);
 

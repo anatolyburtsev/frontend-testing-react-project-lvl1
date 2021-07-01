@@ -5,7 +5,7 @@ import nock from 'nock';
 import pageLoader from '../src/index.js';
 
 const loadFixture = (filename) => {
-  const pathToFixtures = path.resolve(__dirname, '../__fixtures__/', filename);
+  const pathToFixtures = path.resolve(__dirname, '..', '__fixtures__', filename);
   return fs.readFile(pathToFixtures, 'utf8');
 };
 
@@ -25,7 +25,7 @@ afterEach(() => {
 
 beforeEach(async () => {
   outputDir = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
-  assets = Object.freeze({
+  assets = {
     image: {
       fixturePath: 'expected/nodejs.png',
       expectedPath: 'ru-hexlet-io-assets-professions-nodejs.png',
@@ -51,7 +51,7 @@ beforeEach(async () => {
       expectedPath: 'ru-hexlet-io-courses.html',
       url: urlPath,
     },
-  });
+  };
 });
 
 describe('page loader, positive cases', () => {
@@ -79,7 +79,7 @@ describe('page loader, positive cases', () => {
     const response = await pageLoader(url, outputDir);
     const expectedPath = path.join(outputDir, 'ru-hexlet-io-courses.html');
     expect(response).toEqual({ filepath: expectedPath });
-    const expectedContent = await loadFixture('expected/website.html');
+    const expectedContent = await loadFixture(path.join('expected', 'website.html'));
     const content = await fs.readFile(expectedPath, 'utf-8');
     expect(content).toEqual(expectedContent);
   });
